@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Production Shift Report Dashboard | PPC Controllers</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #064e3b;
+            --primary-light: #10b981;
+            --accent: #f59e0b;
+            --bg-page: #f8fafc;
+            --bg-card: #ffffff;
+            --border: #e2e8f0;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --table-header: #f1f5f9;
+            --success: #15803d;
+            --danger: #b91c1c;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .controls {
+            width: 95%;
+            max-width: 1300px;
+            background: var(--bg-card);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 40px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            align-items: flex-end;
+            border: 1px solid var(--border);
+        }
+
+        .upload-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .upload-group label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .file-input-wrapper {
+            background: #f8fafc;
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+        }
+
+        .btn {
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            height: 48px;
+        }
+
+        .btn-generate {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-print {
+            background-color: white;
+            color: var(--text-main);
+            border: 1px solid var(--border);
+        }
+
+        #report-page {
+            width: 95%;
+            max-width: 1300px;
+            background: white;
+            padding: 40px;
+            border: 1px solid var(--border);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding-bottom: 15px;
+        }
+
+        .report-header h1 {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: 2.2fr 1.3fr;
+            gap: 25px;
+            align-items: start;
+        }
+
+        .table-wrapper {
+            border: 1px solid #000000;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+
+        th,
+        td {
+            border: 1px solid #cbd5e1;
+            padding: 8px 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f1f5f9;
+            font-weight: 700;
+            font-size: 0.75rem;
+        }
+
+        td.label {
+            text-align: left;
+            font-weight: 600;
+            background-color: #f8fafc;
+            color: #475569;
+        }
+
+        .bg-primary-td {
+            background-color: #ecfdf5 !important;
+        }
+
+        .bg-accent-td {
+            background-color: #fffbeb !important;
+        }
+
+        .text-bold {
+            font-weight: 700;
+        }
+
+        .total-row {
+            background-color: #f1f5f9;
+            font-weight: 800;
+        }
+
+        .grand-total-row {
+            background-color: #064e3b;
+            color: white;
+            font-weight: 800;
+        }
+
+        .efficiency-banner {
+            grid-column: span 2;
+            background: #fafafa;
+            border: 1px solid var(--border);
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 8px;
+        }
+
+        .eff-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.4rem;
+            background: #fff;
+            padding: 4px 20px;
+            border: 2px solid #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .bottom-sections {
+            grid-column: span 2;
+            display: grid;
+            grid-template-columns: 1.5fr 0.1fr 1.2fr;
+            gap: 15px;
+        }
+
+        [contenteditable="true"] {
+            outline: none;
+            background: #fff;
+        }
+
+        [contenteditable="true"]:focus {
+            background: #fffbeb;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+                margin: 0;
+                overflow: hidden;
+            }
+
+            .controls,
+            #debug-log {
+                display: none !important;
+            }
+
+            #report-page {
+                width: 1280px !important;
+                box-shadow: none;
+                border: none;
+                padding: 10px !important;
+                margin: 50px auto 0 !important;
+                /* Added top margin to lower the report */
+                zoom: 0.72;
+                transform-origin: top center;
+            }
+
+            .grid-container {
+                gap: 15px !important;
+            }
+
+            .report-header {
+                padding-bottom: 10px !important;
+            }
+
+            @page {
+                size: A4 landscape;
+                margin: 0;
+            }
+        }
+
+        #debug-log {
+            margin-top: 30px;
+            width: 95%;
+            max-width: 1300px;
+            padding: 15px;
+            background: #000;
+            color: #0f0;
+            font-family: monospace;
+            font-size: 0.7rem;
+            border-radius: 8px;
+            display: none;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        /* Responsive adjustments */
+        @media screen and (max-width: 1100px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+
+            .table-wrapper {
+                overflow-x: auto;
+            }
+
+            .report-header h1 {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media screen and (max-width: 600px) {
+            body {
+                padding: 15px 10px;
+            }
+
+            .controls {
+                padding: 20px;
+                gap: 15px;
+            }
+
+            .upload-group {
+                flex: none;
+                width: 100%;
+            }
+
+            #report-page {
+                padding: 15px;
+            }
+
+            .report-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="controls">
+        <div class="upload-group">
+            <label>Shift Performance File(s)</label>
+            <div class="file-input-wrapper">
+                <input type="file" id="shift-file" accept=".xlsm,.xlsx" multiple>
+            </div>
+        </div>
+        <div class="upload-group">
+            <label>Pending Tracker (.xlsx)</label>
+            <div class="file-input-wrapper">
+                <input type="file" id="pending-file" accept=".xlsx">
+            </div>
+        </div>
+        <div class="upload-group">
+            <label>8:30 Pending (.xlsx)</label>
+            <div class="file-input-wrapper">
+                <input type="file" id="pending-830-file" accept=".xlsx">
+            </div>
+        </div>
+        <button class="btn btn-generate" onclick="processDashboard()">Generate Report</button>
+        <button class="btn btn-print" onclick="window.print()">Print</button>
+    </div>
+
+    <div id="report-page">
+        <header class="report-header">
+            <div class="brand">
+                <h1>PRODUCTION SHIFT REPORT</h1>
+                <div style="font-size: 0.85rem; font-weight: 700; color: var(--primary-light);"></div>
+            </div>
+            <div class="date-info">DATE: <span id="display-date">--/--/----</span></div>
+        </header>
+
+        <section class="grid-container">
+            <div class="table-wrapper">
+                <table class="shift-output-table">
+                    <thead>
+                        <tr style="background: #064e3b; color: rgb(44, 41, 41);">
+                            <th rowspan="2" style="width: 160px;">SHIFT OUTPUT</th>
+                            <th rowspan="2">TARGET</th>
+                            <th colspan="3">FINAL PRODUCTION</th>
+                            <th rowspan="2">EFF%</th>
+                            <th colspan="3">MODEL - OPAQUE</th>
+                        </tr>
+                        <tr style="background: #1e293b; color: rgb(32, 31, 31);">
+                            <th>FRESH</th>
+                            <th>REPEAT</th>
+                            <th>TOTAL</th>
+                            <th>TARGET</th>
+                            <th>ACH.</th>
+                            <th>EFF%</th>
+                        </tr>
+                    </thead>
+                    <tbody id="shift-body">
+                        <!-- Shift A -->
+                        <tr>
+                            <td class="label">OUTSIDE KERALA</td>
+                            <td rowspan="3" id="s-a-out-tar" contenteditable="true">2000</td>
+                            <td id="s-a-out-from">0</td>
+                            <td id="s-a-out-rep">0</td>
+                            <td id="s-a-out-total" class="text-bold">0</td>
+                            <td rowspan="3" id="s-a-eff" class="bg-primary-td text-bold">0%</td>
+                            <td rowspan="3" id="s-a-mod-tar" contenteditable="true">1725</td>
+                            <td rowspan="3" id="s-a-mod-ach" class="text-bold">0</td>
+                            <td rowspan="3" id="s-a-mod-eff" class="bg-accent-td text-bold">0%</td>
+                        </tr>
+                        <tr>
+                            <td class="label">INSIDE KERALA</td>
+                            <td id="s-a-ins-from">0</td>
+                            <td id="s-a-ins-rep">0</td>
+                            <td id="s-a-ins-total" class="text-bold">0</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td class="label">TOTAL SHIFT-A</td>
+                            <td id="s-a-tot-from">0</td>
+                            <td id="s-a-tot-rep">0</td>
+                            <td id="s-a-tot-total" class="text-bold">0</td>
+                        </tr>
+                        <!-- Shift B -->
+                        <tr>
+                            <td class="label">OUTSIDE KERALA</td>
+                            <td rowspan="3" id="s-b-out-tar" contenteditable="true">1850</td>
+                            <td id="s-b-out-from">0</td>
+                            <td id="s-b-out-rep">0</td>
+                            <td id="s-b-out-total" class="text-bold">0</td>
+                            <td rowspan="3" id="s-b-eff" class="bg-primary-td text-bold">0%</td>
+                            <td rowspan="3" id="s-b-mod-tar" contenteditable="true">1325</td>
+                            <td rowspan="3" id="s-b-mod-ach" class="text-bold">0</td>
+                            <td rowspan="3" id="s-b-mod-eff" class="bg-accent-td text-bold">0%</td>
+                        </tr>
+                        <tr>
+                            <td class="label">INSIDE KERALA</td>
+                            <td id="s-b-ins-from">0</td>
+                            <td id="s-b-ins-rep">0</td>
+                            <td id="s-b-ins-total" class="text-bold">0</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td class="label">TOTAL SHIFT-B</td>
+                            <td id="s-b-tot-from">0</td>
+                            <td id="s-b-tot-rep">0</td>
+                            <td id="s-b-tot-total" class="text-bold">0</td>
+                        </tr>
+                        <!-- Shift C -->
+                        <tr>
+                            <td class="label">SHIFT-C</td>
+                            <td id="s-c-tar" contenteditable="true">650</td>
+                            <td id="s-c-from">0</td>
+                            <td id="s-c-rep">0</td>
+                            <td id="s-c-total" class="text-bold">0</td>
+                            <td id="s-c-eff" class="bg-primary-td text-bold">0%</td>
+                            <td id="s-c-mod-tar" contenteditable="true">650</td>
+                            <td id="s-c-mod-ach" class="text-bold">0</td>
+                            <td id="s-c-mod-eff" class="bg-accent-td text-bold">0%</td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr class="grand-total-row">
+                            <td class="label" style="background:transparent; color:white;">TOTAL OUT</td>
+                            <td id="g-out-tar">4500</td>
+                            <td id="g-out-from">0</td>
+                            <td id="g-out-rep">0</td>
+                            <td id="g-out-total">0</td>
+                            <td id="g-out-eff">0%</td>
+                            <td id="g-mod-tar">3700</td>
+                            <td id="g-mod-ach">0</td>
+                            <td id="g-mod-eff">0%</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+
+
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr style="background:#064e3b; color:rgb(33, 30, 30);">
+                                <th style="text-align:left;">PENDING @ 8:30 AM</th>
+                                <th>TEETH COUNT</th>
+                                <th>0 DAY</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="label">METAL FREE</td>
+                                <td id="p-mf">0</td>
+                                <td rowspan="3" id="p-0d-sum" class="bg-primary-td text-bold">0</td>
+                            </tr>
+                            <tr>
+                                <td class="label">MLC</td>
+                                <td id="p-mlc">0</td>
+                            </tr>
+                            <tr>
+                                <td class="label">MAGNA & NOVA</td>
+                                <td id="p-mn">0</td>
+                            </tr>
+                            <tr class="total-row">
+                                <td class="label">TOTAL</td>
+                                <td id="p-tot">0</td>
+                                <td>-</td>
+                            </tr>
+                            <tr>
+                                <td class="label">K3 & L1</td>
+                                <td id="p-k3">0</td>
+                                <td id="p-k3-0d" contenteditable="true">26</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr style="background: #fef3c7; color: #92400e;">
+                                <th colspan="4">PENDING DETAILS @ 8:00 AM</th>
+                            </tr>
+                            <tr>
+                                <th style="width: 80px;">CODE</th>
+                                <th>COUNT</th>
+                                <th>TSD/DWG</th>
+                                <th>0 DAY</th>
+                            </tr>
+                        </thead>
+                        <tbody id="det-body"></tbody>
+                        <tfoot>
+                            <tr class="grand-total-row">
+                                <td colspan="1">TOTAL</td>
+                                <td id="det-tot">0</td>
+
+                            </tr>
+
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <div id="debug-log">
+            <h3>--- SESSION DEBUG LOG ---</h3>
+            <ul id="log-list" style="list-style: none;"></ul>
+        </div>
+    </div>
+
+    <script>
+        const DOM = {
+            date: document.getElementById('display-date'),
+            bannerDate: document.getElementById('banner-date'),
+            bannerVal: document.getElementById('banner-val'),
+            detBody: document.getElementById('det-body'),
+            logList: document.getElementById('log-list'),
+            log: document.getElementById('debug-log')
+        };
+
+        const CODES = ['A1', 'A2', 'A3', 'A4', 'B1', 'B2', 'B3', 'K1', 'K2', 'K3', 'K4', 'L1'];
+
+        function addLog(msg, type = 'info') {
+            const li = document.createElement('li');
+            li.style.color = type === 'error' ? '#f55' : type === 'success' ? '#0f0' : '#0cf';
+            li.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            DOM.logList.appendChild(li);
+            DOM.log.style.display = 'block';
+        }
+
+        function init() {
+            const today = new Date();
+            const fmt = today.toLocaleDateString('en-GB').replace(/\//g, '-');
+            DOM.date.innerText = fmt;
+            if (DOM.bannerDate) DOM.bannerDate.innerText = fmt;
+
+            let html = '';
+            CODES.forEach((c, idx) => {
+                html += `<tr><td class="label">${c}</td><td id="c-cnt-${c}">0</td>${idx === 0 ? `<td rowspan="${CODES.length}" id="c-tsd-val" contenteditable="true">0</td>` : ''}${idx === 0 ? `<td rowspan="${CODES.length}" id="c-0d-val" contenteditable="true">0</td>` : ''}</tr>`;
+            });
+            DOM.detBody.innerHTML = html;
+        }
+
+        async function processDashboard() {
+            const shiftFiles = document.getElementById('shift-file').files;
+            const pendingFile = document.getElementById('pending-file').files[0];
+            const pending830Input = document.getElementById('pending-830-file');
+            const pending830File = pending830Input ? pending830Input.files[0] : null;
+            DOM.logList.innerHTML = '';
+
+            for (let file of shiftFiles) {
+                addLog(`Parsing: ${file.name}`, 'info');
+                const wb = await loadExcel(file);
+                parseShiftPerformance(wb);
+            }
+
+            if (pendingFile) {
+                addLog(`Parsing: ${pendingFile.name}`, 'info');
+                const wb = await loadExcel(pendingFile);
+                parsePendingTracker(wb);
+            }
+
+            if (pending830File) {
+                addLog(`Parsing: ${pending830File.name}`, 'info');
+                const wb = await loadExcel(pending830File);
+                parsePending830Tracker(wb);
+            }
+            recalculate();
+        }
+
+        function loadExcel(file) {
+            return new Promise((r) => {
+                const reader = new FileReader();
+                // cellStyles:true is REQUIRED so SheetJS reads the hidden/filtered row metadata (!rows[n].hidden)
+                // Without this flag, ws['!rows'] is always empty and filtered rows are never skipped
+                reader.onload = (e) => r(XLSX.read(e.target.result, { type: 'array', cellStyles: true, sheetStubs: true }));
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function clean(v) { return String(v || "").replace(/\s+/g, ' ').trim().toUpperCase(); }
+
+        function parseShiftPerformance(wb) {
+            addLog(`Workbook sheets: ${wb.SheetNames.join(', ')}`, 'info');
+
+            wb.SheetNames.forEach((sheetName, sheetIndex) => {
+                const sheetClean = clean(sheetName);
+                const isCB = sheetClean.includes("C&B") || sheetClean.includes("C & B");
+                const isPerformance = sheetClean.includes("PERFORMANCE") || sheetClean.includes("MODEL TO OPAQUE") || sheetClean.includes("MODEL") || sheetIndex === 4;
+                const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header: 1 });
+                let shift = 'A';
+
+                // Pass 1: Identify shift
+                if (sheetName.includes('B')) shift = 'B';
+                if (sheetName.includes('C')) shift = 'C';
+                rows.forEach((row) => {
+                    const lineStr = row.map(c => clean(c)).join(" | ");
+                    if (lineStr.includes("SHIFT - B") || lineStr.includes("SHIFT B")) shift = 'B';
+                    if (lineStr.includes("SHIFT - C") || lineStr.includes("SHIFT C")) shift = 'C';
+                });
+
+                // Extract directly from the worksheet for C&B sheet using exact cell mappings
+                if (isCB) {
+                    const ws = wb.Sheets[sheetName];
+                    const getVal = (cell) => ws[cell] ? parseFloat(ws[cell].v) || 0 : 0;
+
+                    // SHIFT A
+                    const a_out_from = getVal('E9') + getVal('E10');
+                    const a_out_rep = getVal('G9') + getVal('G10');
+                    const a_ins_from = getVal('E16') + getVal('E17');
+                    const a_ins_rep = getVal('G16') + getVal('G17');
+
+                    // SHIFT B
+                    const b_out_from = getVal('E66') + getVal('E67');
+                    const b_out_rep = getVal('G66') + getVal('G67');
+                    const b_ins_from = getVal('E73') + getVal('E74');
+                    const b_ins_rep = getVal('G73') + getVal('G74');
+
+                    // SHIFT C
+                    const c_from = getVal('E129') + getVal('E130') + getVal('E136') + getVal('E137');
+                    const c_rep = getVal('G129') + getVal('G130') + getVal('G136') + getVal('G137');
+
+                    updateShiftValues('A', "OUTSIDE", a_out_from, a_out_rep, 0);
+                    updateShiftValues('A', "INSIDE", a_ins_from, a_ins_rep, 0);
+                    updateShiftValues('B', "OUTSIDE", b_out_from, b_out_rep, 0);
+                    updateShiftValues('B', "INSIDE", b_ins_from, b_ins_rep, 0);
+                    updateShiftValues('C', "", c_from, c_rep, 0);
+
+                    addLog(`[C&B Sheet] Extracted Shifts A, B & C via exact cell refs`, 'info');
+                }
+
+                // Extract MODEL TO OPAQUE from PERFORMANCE sheet (5th page or name match)
+                if (isPerformance && !isCB) {
+                    const ws = wb.Sheets[sheetName];
+                    const getVal = (cell) => ws[cell] ? parseFloat(ws[cell].v) || 0 : 0;
+
+                    const modA = getVal('J4');
+                    const modB = getVal('J5');
+                    const modC = getVal('J6');
+
+                    addLog(`[Sheet "${sheetName}" idx=${sheetIndex}] Reading MODEL TO OPAQUE: J4=${modA}, J5=${modB}, J6=${modC}`, 'info');
+
+                    updateShiftValues('A', "OUTSIDE", 0, 0, modA);
+                    updateShiftValues('B', "OUTSIDE", 0, 0, modB);
+                    updateShiftValues('C', "", 0, 0, modC);
+
+                    addLog(`[Performance Sheet] MODEL TO OPAQUE: A=${modA}, B=${modB}, C=${modC}`, 'success');
+                    return; // skip row-by-row parsing for this sheet
+                }
+
+                let currentSection = ""; // "OUTSIDE" or "INSIDE"
+
+                rows.forEach((row, i) => {
+                    const lineStr = row.map(c => clean(c)).join(" | ");
+
+                    if (lineStr.includes("OUTSIDE KERALA")) currentSection = "OUTSIDE";
+                    if (lineStr.includes("INSIDE KERALA")) currentSection = "INSIDE";
+
+                    const label = clean(row[0]);
+                    if (label.includes("CB METAL FREE") || label.includes("CB METAL CERAMIC")) {
+                        let freshUnits = parseFloat(row[1]) || 0;
+                        let repeatUnits = parseFloat(row[3]) || 0;
+                        const modelCount = parseFloat(row[6]) || parseFloat(row[2]) + parseFloat(row[4]) || 0;
+
+                        if (isCB) {
+                            // Already got from and repeat directly from explicit cells above for ALL sections.
+                            // Prevent double-counting, only add modelCount here.
+                            freshUnits = 0;
+                            repeatUnits = 0;
+                        }
+
+                        updateShiftValues(shift, currentSection, freshUnits, repeatUnits, modelCount);
+                        addLog(`Matched ${label} in ${currentSection} (Shift ${shift}): +${freshUnits} Units, +${modelCount} Model`, 'success');
+                    }
+                });
+            });
+        }
+
+        const totals = {
+            A: { OUTSIDE: { from: 0, rep: 0, mod: 0 }, INSIDE: { from: 0, rep: 0, mod: 0 } },
+            B: { OUTSIDE: { from: 0, rep: 0, mod: 0 }, INSIDE: { from: 0, rep: 0, mod: 0 } },
+            C: { from: 0, rep: 0, mod: 0 }
+        };
+
+        function updateShiftValues(s, sec, f, r, m) {
+            if (s === 'C') {
+                totals.C.from += f; totals.C.rep += r; totals.C.mod += m;
+            } else {
+                if (!sec) return;
+                totals[s][sec].from += f; totals[s][sec].rep += r; totals[s][sec].mod += m;
+            }
+            applyTotalsToDOM();
+        }
+
+        function applyTotalsToDOM() {
+            // Shift A
+            set('s-a-out-from', totals.A.OUTSIDE.from); set('s-a-out-rep', totals.A.OUTSIDE.rep);
+            set('s-a-ins-from', totals.A.INSIDE.from); set('s-a-ins-rep', totals.A.INSIDE.rep);
+            set('s-a-mod-ach', totals.A.OUTSIDE.mod + totals.A.INSIDE.mod);
+
+            // Shift B
+            set('s-b-out-from', totals.B.OUTSIDE.from); set('s-b-out-rep', totals.B.OUTSIDE.rep);
+            set('s-b-ins-from', totals.B.INSIDE.from); set('s-b-ins-rep', totals.B.INSIDE.rep);
+            set('s-b-mod-ach', totals.B.OUTSIDE.mod + totals.B.INSIDE.mod);
+
+            // Shift C
+            set('s-c-from', totals.C.from); set('s-c-rep', totals.C.rep); set('s-c-mod-ach', totals.C.mod);
+        }
+
+        function parsePendingTracker(wb) {
+            // 1. Process summary stats from the first sheet (for METAL FREE, MLC, etc.)
+            if (wb.SheetNames.length > 0) {
+                const summaryRows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
+                summaryRows.forEach(row => {
+                    const label = clean(row[0]);
+                    const val = parseFloat(row[1]) || 0;
+                    if (label.includes("METAL FREE") && !label.includes("CB")) set('p-mf', val);
+                    if (label.includes("MLC")) set('p-mlc', val);
+                    if (label.includes("MAGNA")) set('p-mn', val);
+                    // K3 & L1 handled below after priority code loop
+                });
+                addLog(`Pending Tracker: parsed summary from "${wb.SheetNames[0]}"`, 'success');
+            }
+
+            // 2. Process PEND sheet for A1, A2... Priority Codes
+            const pendSheetName = wb.SheetNames.find(n => clean(n).includes('PEND')) || wb.SheetNames[0];
+            const pendSheetIdx = wb.SheetNames.indexOf(pendSheetName);
+            const ws = wb.Sheets[pendSheetName];
+
+            addLog(`Using sheet: "${pendSheetName}" (index ${pendSheetIdx})`, 'info');
+            addLog(`Sheet !ref: ${ws['!ref']}`, 'info');
+            addLog(`Sheet !autofilter: ${JSON.stringify(ws['!autofilter'] || 'NONE')}`, 'info');
+            addLog(`Sheet !rows length: ${(ws['!rows'] || []).length}`, 'info');
+
+            // Dump !rows details if they exist
+            const rawRows = ws['!rows'] || [];
+            if (rawRows.length > 0) {
+                let hiddenSample = [];
+                rawRows.forEach((r, i) => { if (r && r.hidden) hiddenSample.push(i); });
+                addLog(`!rows hidden indices (first 20): ${hiddenSample.slice(0, 20).join(',')}`, 'info');
+            } else {
+                addLog(`!rows is EMPTY — SheetJS did not detect any row metadata`, 'error');
+            }
+
+            // Try to detect hidden rows from the raw zip (alternative method)
+            let hiddenRowSet = new Set();
+            try {
+                // SheetJS stores raw files in wb.Strings, wb.Sheets, etc.
+                // For xlsx files, try to access the sheet XML from the zip
+                if (wb.Sheets && wb.Directory) {
+                    addLog(`Workbook has Directory — attempting raw XML parse`, 'info');
+                }
+
+                // Alternative: check each cell's row against SheetJS internal data
+                // SheetJS may store row props differently per version
+                const sheetKeys = Object.keys(ws).filter(k => !k.startsWith('!'));
+                addLog(`Sheet has ${sheetKeys.length} cell entries`, 'info');
+            } catch (ex) {
+                addLog(`Raw XML parse failed: ${ex.message}`, 'error');
+            }
+
+            // Get data rows
+            const rows = XLSX.utils.sheet_to_json(ws, { header: "A", defval: "", blankrows: true });
+            const range = XLSX.utils.decode_range(ws['!ref'] || "A1:A1");
+            const totalRows = rows.length;
+
+            // Log sample rows to verify column mapping
+            addLog(`--- SAMPLE ROWS (first 5 data rows) ---`, 'info');
+            rows.slice(0, 5).forEach((row, i) => {
+                addLog(`Row${i}: A=${row['A']}, B=${row['B']}, C=${row['C']}, D=${row['D']}, I=${row['I']}`, 'info');
+            });
+
+            // Count ALL rows by priority code (no filtering)
+            const teethMap = {};
+            const countMap = {};
+            CODES.forEach(c => { teethMap[c] = 0; countMap[c] = 0; });
+
+            let totalDataRows = 0;
+            let tsdTotal = 0;
+            rows.forEach((row, idx) => {
+                let rawCode = clean(row['C']); 
+                let code = rawCode.replace(/[*]/g, ''); // Strip asterisks for variations (B2*, K3*, etc.)
+                const teeth = parseFloat(String(row['I'] || "0").replace(/,/g, '')) || 0;
+                const status = clean(row['L']); // Column L
+
+                if (CODES.includes(code)) {
+                    teethMap[code] += teeth;
+                    countMap[code]++;
+                    totalDataRows++;
+                    if (status.includes("TSD")) {
+                        tsdTotal += teeth;
+                    }
+                }
+            });
+
+            // Push values into PENDING DETAILS table
+            CODES.forEach(c => {
+                const el = document.getElementById(`c-cnt-${c}`);
+                if (el) el.innerText = teethMap[c];
+            });
+
+            set('c-tsd-val', tsdTotal);
+            
+            // K3 & L1 handled in parsePending830Tracker as per latest request
+            addLog(`Total rows in sheet: ${totalRows}, Rows matching codes: ${totalDataRows}, TSD Sum: ${tsdTotal}`, 'info');
+            addLog(`Row counts per code: ${JSON.stringify(countMap)}`, 'info');
+            addLog(`Teeth per code: ${JSON.stringify(teethMap)}`, 'success');
+        }
+
+        function parsePending830Tracker(wb) {
+            if (wb.SheetNames.length > 0) {
+                const ws = wb.Sheets[wb.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(ws, { header: "A", defval: "", blankrows: true });
+
+                let magnaNovaCount = 0;
+                let mlcCount = 0;
+                let metalFreeCount = 0;
+                let k3L1Count = 0;
+
+                let teethCol = 'I';
+                // Automatically find the column containing 'TEETH' in case it's not column I
+                for (let r = 0; r < 5 && r < rows.length; r++) {
+                    for (let key in rows[r]) {
+                        if (String(rows[r][key]).toUpperCase().includes('TEETH')) {
+                            teethCol = key;
+                            break;
+                        }
+                    }
+                }
+
+                rows.forEach((row, idx) => {
+                    const teeth = parseFloat(row[teethCol]) || parseFloat(row['I']) || 0;
+                    if (teeth > 0) {
+                        const codeCol = clean(row['C']).replace(/[*]/g, '');
+                        if (codeCol === 'K3' || codeCol === 'L1') {
+                            k3L1Count += teeth;
+                        }
+
+                        const nameCol = String(row['G'] || "").toUpperCase();
+                        if (nameCol.includes("NOVA") || nameCol.includes("MAGNA")) {
+                            magnaNovaCount += teeth;
+                        } else if (nameCol.includes("DMLS")) {
+                            mlcCount += teeth;
+                        } else {
+                            metalFreeCount += teeth;
+                        }
+                    }
+                });
+
+                set('p-k3', k3L1Count);
+                set('p-mn', magnaNovaCount);
+                set('p-mlc', mlcCount);
+                set('p-mf', metalFreeCount);
+
+                addLog(`8:30 Pending: MAGNA/NOVA=${magnaNovaCount}, MLC=${mlcCount}, MF=${metalFreeCount}`, 'success');
+            }
+        }
+
+        function set(id, v) { const el = document.getElementById(id); if (el) el.innerText = typeof v === 'number' ? v : (v || 0); }
+        function get(id) {
+            const el = document.getElementById(id);
+            if (!el) return 0;
+            const text = (el.innerText || el.textContent || "0").trim().replace(/,/g, '');
+            const val = parseFloat(text);
+            return isNaN(val) ? 0 : val;
+        }
+
+        function recalculate() {
+            const fmt = (a, t) => t > 0 ? ((a / t) * 100).toFixed(1) + '%' : '0%';
+            ['s-a-out', 's-a-ins', 's-b-out', 's-b-ins', 's-c'].forEach(p => {
+                const f = get(p + '-from'), r = get(p + '-rep'); set(p + '-total', f + r);
+            });
+            // Totals
+            set('s-a-tot-from', get('s-a-out-from') + get('s-a-ins-from'));
+            set('s-a-tot-rep', get('s-a-out-rep') + get('s-a-ins-rep'));
+            set('s-a-tot-total', get('s-a-out-total') + get('s-a-ins-total'));
+            set('s-a-eff', fmt(get('s-a-tot-total'), get('s-a-out-tar')));
+            set('s-a-mod-eff', fmt(get('s-a-mod-ach'), get('s-a-mod-tar')));
+
+            set('s-b-tot-from', get('s-b-out-from') + get('s-b-ins-from'));
+            set('s-b-tot-rep', get('s-b-out-rep') + get('s-b-ins-rep'));
+            set('s-b-tot-total', get('s-b-out-total') + get('s-b-ins-total'));
+            set('s-b-eff', fmt(get('s-b-tot-total'), get('s-b-out-tar')));
+            set('s-b-mod-eff', fmt(get('s-b-mod-ach'), get('s-b-mod-tar')));
+
+            set('s-c-eff', fmt(get('s-c-total'), get('s-c-tar')));
+            set('s-c-mod-eff', fmt(get('s-c-mod-ach'), get('s-c-mod-tar')));
+
+            // Scheduled
+            ['m', 'c', 'g', 't', 'r'].forEach(k => set(`sch-${k}-total`, get(`sch-${k}-main`) + get(`sch-${k}-proj`)));
+            set('sch-tot-main', get('sch-m-main') + get('sch-c-main') + get('sch-g-main') + get('sch-t-main') + get('sch-r-main'));
+            set('sch-tot-proj', get('sch-m-proj') + get('sch-c-proj') + get('sch-g-proj') + get('sch-t-proj') + get('sch-r-proj'));
+            set('sch-tot-total', get('sch-tot-main') + get('sch-tot-proj'));
+
+            const gtFrom = get('s-a-tot-from') + get('s-b-tot-from') + get('s-c-from');
+            const gtRep = get('s-a-tot-rep') + get('s-b-tot-rep') + get('s-c-rep');
+            const gtTot = get('s-a-tot-total') + get('s-b-tot-total') + get('s-c-total');
+            const gtTar = get('s-a-out-tar') + get('s-b-out-tar') + get('s-c-tar');
+            set('g-out-from', gtFrom); set('g-out-rep', gtRep);
+            set('g-out-tar', gtTar); set('g-out-total', gtTot); set('g-out-eff', fmt(gtTot, gtTar));
+            if (DOM.bannerVal) DOM.bannerVal.innerText = fmt(gtTot, gtTar);
+
+            // Grand total MODEL TO OPAQUE
+            const gtModAch = get('s-a-mod-ach') + get('s-b-mod-ach') + get('s-c-mod-ach');
+            const gtModTar = get('s-a-mod-tar') + get('s-b-mod-tar') + get('s-c-mod-tar');
+            set('g-mod-ach', gtModAch);
+            set('g-mod-tar', gtModTar);
+            set('g-mod-eff', fmt(gtModAch, gtModTar));
+
+            let detSum = 0;
+            CODES.forEach(c => {
+                detSum += get(`c-cnt-${c}`);
+            });
+
+            const tsdTotalVal = get('c-tsd-val');
+            const zeroDayTotalVal = get('c-0d-val');
+
+            set('det-tot', detSum);
+            set('det-tsd-tot', tsdTotalVal);
+            set('det-0d-tot', zeroDayTotalVal);
+
+            const pendingGrandTotal = detSum + tsdTotalVal + zeroDayTotalVal;
+            set('det-grand', pendingGrandTotal);
+
+            set('p-tot', get('p-mf') + get('p-mlc') + get('p-mn'));
+            set('p-0d-sum', get('p-mf') + get('p-mlc') + get('p-mn'));
+        }
+
+        document.addEventListener('input', () => recalculate());
+        init();
+    </script>
+</body>
+
+</html>
