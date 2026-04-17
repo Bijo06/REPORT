@@ -43,7 +43,7 @@
         }
 
         .controls {
-            width: 100%;
+            width: 95%;
             max-width: 1300px;
             background: var(--bg-card);
             padding: 30px;
@@ -51,6 +51,7 @@
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
             margin-bottom: 40px;
             display: flex;
+            flex-wrap: wrap;
             gap: 24px;
             align-items: flex-end;
             border: 1px solid var(--border);
@@ -102,7 +103,8 @@
         }
 
         #report-page {
-            width: 1300px;
+            width: 95%;
+            max-width: 1300px;
             background: white;
             padding: 40px;
             border: 1px solid var(--border);
@@ -117,7 +119,6 @@
             justify-content: space-between;
             align-items: flex-end;
             padding-bottom: 15px;
-            border-bottom: 3px solid var(--primary);
         }
 
         .report-header h1 {
@@ -131,10 +132,11 @@
             display: grid;
             grid-template-columns: 2.2fr 1.3fr;
             gap: 25px;
+            align-items: start;
         }
 
         .table-wrapper {
-            border: 1px solid #cbd5e1;
+            border: 1px solid #000000;
             border-radius: 4px;
             overflow: hidden;
         }
@@ -228,6 +230,8 @@
             body {
                 background: white;
                 padding: 0;
+                margin: 0;
+                overflow: hidden;
             }
 
             .controls,
@@ -236,21 +240,34 @@
             }
 
             #report-page {
-                width: 100% !important;
+                width: 1280px !important;
                 box-shadow: none;
                 border: none;
-                padding: 0;
+                padding: 10px !important;
+                margin: 50px auto 0 !important;
+                /* Added top margin to lower the report */
+                zoom: 0.72;
+                transform-origin: top center;
+            }
+
+            .grid-container {
+                gap: 15px !important;
+            }
+
+            .report-header {
+                padding-bottom: 10px !important;
             }
 
             @page {
                 size: A4 landscape;
-                margin: 5mm;
+                margin: 0;
             }
         }
 
         #debug-log {
             margin-top: 30px;
-            width: 1300px;
+            width: 95%;
+            max-width: 1300px;
             padding: 15px;
             background: #000;
             color: #0f0;
@@ -260,6 +277,47 @@
             display: none;
             max-height: 300px;
             overflow-y: auto;
+        }
+
+        /* Responsive adjustments */
+        @media screen and (max-width: 1100px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+
+            .table-wrapper {
+                overflow-x: auto;
+            }
+
+            .report-header h1 {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media screen and (max-width: 600px) {
+            body {
+                padding: 15px 10px;
+            }
+
+            .controls {
+                padding: 20px;
+                gap: 15px;
+            }
+
+            .upload-group {
+                flex: none;
+                width: 100%;
+            }
+
+            #report-page {
+                padding: 15px;
+            }
+
+            .report-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
         }
     </style>
 </head>
@@ -292,8 +350,7 @@
         <header class="report-header">
             <div class="brand">
                 <h1>PRODUCTION SHIFT REPORT</h1>
-                <div style="font-size: 0.85rem; font-weight: 700; color: var(--primary-light);">PPC CONTROLLERS
-                    DASHBOARD</div>
+                <div style="font-size: 0.85rem; font-weight: 700; color: var(--primary-light);"></div>
             </div>
             <div class="date-info">DATE: <span id="display-date">--/--/----</span></div>
         </header>
@@ -302,15 +359,15 @@
             <div class="table-wrapper">
                 <table class="shift-output-table">
                     <thead>
-                        <tr style="background: #064e3b; color: white;">
+                        <tr style="background: #064e3b; color: rgb(44, 41, 41);">
                             <th rowspan="2" style="width: 160px;">SHIFT OUTPUT</th>
                             <th rowspan="2">TARGET</th>
                             <th colspan="3">FINAL PRODUCTION</th>
                             <th rowspan="2">EFF%</th>
                             <th colspan="3">MODEL - OPAQUE</th>
                         </tr>
-                        <tr style="background: #1e293b; color: white;">
-                            <th>FROM</th>
+                        <tr style="background: #1e293b; color: rgb(32, 31, 31);">
+                            <th>FRESH</th>
                             <th>REPEAT</th>
                             <th>TOTAL</th>
                             <th>TARGET</th>
@@ -322,7 +379,7 @@
                         <!-- Shift A -->
                         <tr>
                             <td class="label">OUTSIDE KERALA</td>
-                            <td id="s-a-out-tar" contenteditable="true">2000</td>
+                            <td rowspan="3" id="s-a-out-tar" contenteditable="true">2000</td>
                             <td id="s-a-out-from">0</td>
                             <td id="s-a-out-rep">0</td>
                             <td id="s-a-out-total" class="text-bold">0</td>
@@ -333,14 +390,12 @@
                         </tr>
                         <tr>
                             <td class="label">INSIDE KERALA</td>
-                            <td> - </td>
                             <td id="s-a-ins-from">0</td>
                             <td id="s-a-ins-rep">0</td>
                             <td id="s-a-ins-total" class="text-bold">0</td>
                         </tr>
                         <tr class="total-row">
                             <td class="label">TOTAL SHIFT-A</td>
-                            <td>-</td>
                             <td id="s-a-tot-from">0</td>
                             <td id="s-a-tot-rep">0</td>
                             <td id="s-a-tot-total" class="text-bold">0</td>
@@ -348,7 +403,7 @@
                         <!-- Shift B -->
                         <tr>
                             <td class="label">OUTSIDE KERALA</td>
-                            <td id="s-b-out-tar" contenteditable="true">1850</td>
+                            <td rowspan="3" id="s-b-out-tar" contenteditable="true">1850</td>
                             <td id="s-b-out-from">0</td>
                             <td id="s-b-out-rep">0</td>
                             <td id="s-b-out-total" class="text-bold">0</td>
@@ -359,14 +414,12 @@
                         </tr>
                         <tr>
                             <td class="label">INSIDE KERALA</td>
-                            <td> - </td>
                             <td id="s-b-ins-from">0</td>
                             <td id="s-b-ins-rep">0</td>
                             <td id="s-b-ins-total" class="text-bold">0</td>
                         </tr>
                         <tr class="total-row">
                             <td class="label">TOTAL SHIFT-B</td>
-                            <td>-</td>
                             <td id="s-b-tot-from">0</td>
                             <td id="s-b-tot-rep">0</td>
                             <td id="s-b-tot-total" class="text-bold">0</td>
@@ -406,7 +459,7 @@
                 <div class="table-wrapper">
                     <table>
                         <thead>
-                            <tr style="background:#064e3b; color:white;">
+                            <tr style="background:#064e3b; color:rgb(33, 30, 30);">
                                 <th style="text-align:left;">PENDING @ 8:30 AM</th>
                                 <th>TEETH COUNT</th>
                                 <th>0 DAY</th>
@@ -454,16 +507,12 @@
                         </thead>
                         <tbody id="det-body"></tbody>
                         <tfoot>
-                            <tr class="total-row">
-                                <td class="label">TOTAL</td>
-                                <td id="det-tot">0</td>
-                                <td id="det-tsd-tot">0</td>
-                                <td id="det-0d-tot">0</td>
-                            </tr>
                             <tr class="grand-total-row">
-                                <td colspan="2">GRAND TOTAL</td>
-                                <td colspan="2" id="det-grand">0</td>
+                                <td colspan="1">TOTAL</td>
+                                <td id="det-tot">0</td>
+
                             </tr>
+
                         </tfoot>
                     </table>
                 </div>
@@ -486,7 +535,7 @@
             log: document.getElementById('debug-log')
         };
 
-        const CODES = ['A1', 'A2', 'A3', 'A4', 'B1', 'B2', 'B3', 'S1', 'S2', 'S3', 'S4', 'L1'];
+        const CODES = ['A1', 'A2', 'A3', 'A4', 'B1', 'B2', 'B3', 'K1', 'K2', 'K3', 'K4', 'L1'];
 
         function addLog(msg, type = 'info') {
             const li = document.createElement('li');
@@ -504,7 +553,7 @@
 
             let html = '';
             CODES.forEach((c, idx) => {
-                html += `<tr><td class="label">${c}</td><td id="c-cnt-${c}">0</td>${idx === 0 ? `<td rowspan="${CODES.length}" id="c-tsd-val" contenteditable="true">8</td>` : ''}${idx === 0 ? `<td rowspan="${CODES.length}" id="c-0d-val" contenteditable="true">0</td>` : ''}</tr>`;
+                html += `<tr><td class="label">${c}</td><td id="c-cnt-${c}">0</td>${idx === 0 ? `<td rowspan="${CODES.length}" id="c-tsd-val" contenteditable="true">0</td>` : ''}${idx === 0 ? `<td rowspan="${CODES.length}" id="c-0d-val" contenteditable="true">0</td>` : ''}</tr>`;
             });
             DOM.detBody.innerHTML = html;
         }
@@ -685,7 +734,7 @@
                     if (label.includes("METAL FREE") && !label.includes("CB")) set('p-mf', val);
                     if (label.includes("MLC")) set('p-mlc', val);
                     if (label.includes("MAGNA")) set('p-mn', val);
-                    if (label.includes("K3") && !label.includes("L1")) set('p-k3', val); // Added condition to prevent L1 from overriding
+                    // K3 & L1 handled below after priority code loop
                 });
                 addLog(`Pending Tracker: parsed summary from "${wb.SheetNames[0]}"`, 'success');
             }
@@ -744,14 +793,20 @@
             CODES.forEach(c => { teethMap[c] = 0; countMap[c] = 0; });
 
             let totalDataRows = 0;
+            let tsdTotal = 0;
             rows.forEach((row, idx) => {
-                const code = clean(row['C']);   // Column C — Priority Code
-                const teeth = parseFloat(row['I']) || 0;  // Column I — Teeth Count
+                let rawCode = clean(row['C']); 
+                let code = rawCode.replace(/[*]/g, ''); // Strip asterisks for variations (B2*, K3*, etc.)
+                const teeth = parseFloat(String(row['I'] || "0").replace(/,/g, '')) || 0;
+                const status = clean(row['L']); // Column L
 
                 if (CODES.includes(code)) {
                     teethMap[code] += teeth;
                     countMap[code]++;
                     totalDataRows++;
+                    if (status.includes("TSD")) {
+                        tsdTotal += teeth;
+                    }
                 }
             });
 
@@ -761,7 +816,10 @@
                 if (el) el.innerText = teethMap[c];
             });
 
-            addLog(`Total rows in sheet: ${totalRows}, Rows matching codes: ${totalDataRows}`, 'info');
+            set('c-tsd-val', tsdTotal);
+            
+            // K3 & L1 handled in parsePending830Tracker as per latest request
+            addLog(`Total rows in sheet: ${totalRows}, Rows matching codes: ${totalDataRows}, TSD Sum: ${tsdTotal}`, 'info');
             addLog(`Row counts per code: ${JSON.stringify(countMap)}`, 'info');
             addLog(`Teeth per code: ${JSON.stringify(teethMap)}`, 'success');
         }
@@ -770,10 +828,11 @@
             if (wb.SheetNames.length > 0) {
                 const ws = wb.Sheets[wb.SheetNames[0]];
                 const rows = XLSX.utils.sheet_to_json(ws, { header: "A", defval: "", blankrows: true });
-                
+
                 let magnaNovaCount = 0;
                 let mlcCount = 0;
                 let metalFreeCount = 0;
+                let k3L1Count = 0;
 
                 let teethCol = 'I';
                 // Automatically find the column containing 'TEETH' in case it's not column I
@@ -789,6 +848,11 @@
                 rows.forEach((row, idx) => {
                     const teeth = parseFloat(row[teethCol]) || parseFloat(row['I']) || 0;
                     if (teeth > 0) {
+                        const codeCol = clean(row['C']).replace(/[*]/g, '');
+                        if (codeCol === 'K3' || codeCol === 'L1') {
+                            k3L1Count += teeth;
+                        }
+
                         const nameCol = String(row['G'] || "").toUpperCase();
                         if (nameCol.includes("NOVA") || nameCol.includes("MAGNA")) {
                             magnaNovaCount += teeth;
@@ -800,6 +864,7 @@
                     }
                 });
 
+                set('p-k3', k3L1Count);
                 set('p-mn', magnaNovaCount);
                 set('p-mlc', mlcCount);
                 set('p-mf', metalFreeCount);
@@ -809,7 +874,13 @@
         }
 
         function set(id, v) { const el = document.getElementById(id); if (el) el.innerText = typeof v === 'number' ? v : (v || 0); }
-        function get(id) { const el = document.getElementById(id); return el ? parseFloat(el.innerText) || 0 : 0; }
+        function get(id) {
+            const el = document.getElementById(id);
+            if (!el) return 0;
+            const text = (el.innerText || el.textContent || "0").trim().replace(/,/g, '');
+            const val = parseFloat(text);
+            return isNaN(val) ? 0 : val;
+        }
 
         function recalculate() {
             const fmt = (a, t) => t > 0 ? ((a / t) * 100).toFixed(1) + '%' : '0%';
@@ -853,9 +924,23 @@
             set('g-mod-tar', gtModTar);
             set('g-mod-eff', fmt(gtModAch, gtModTar));
 
-            let detSum = 0; CODES.forEach(c => detSum += get(`c-cnt-${c}`));
-            set('det-tot', detSum); set('det-grand', detSum + get('c-tsd-val') + get('c-0d-val'));
-            set('p-tot', get('p-mf') + get('p-mlc') + get('p-mn')); set('p-0d-sum', get('p-mf') + get('p-mlc') + get('p-mn'));
+            let detSum = 0;
+            CODES.forEach(c => {
+                detSum += get(`c-cnt-${c}`);
+            });
+
+            const tsdTotalVal = get('c-tsd-val');
+            const zeroDayTotalVal = get('c-0d-val');
+
+            set('det-tot', detSum);
+            set('det-tsd-tot', tsdTotalVal);
+            set('det-0d-tot', zeroDayTotalVal);
+
+            const pendingGrandTotal = detSum + tsdTotalVal + zeroDayTotalVal;
+            set('det-grand', pendingGrandTotal);
+
+            set('p-tot', get('p-mf') + get('p-mlc') + get('p-mn'));
+            set('p-0d-sum', get('p-mf') + get('p-mlc') + get('p-mn'));
         }
 
         document.addEventListener('input', () => recalculate());
