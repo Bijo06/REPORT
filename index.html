@@ -226,6 +226,15 @@
             background: #fffbeb;
         }
 
+        .btn-import {
+            background-color: var(--accent);
+            color: white;
+        }
+
+        .btn-import:hover {
+            background-color: #d97706;
+        }
+
         @media print {
             body {
                 background: white;
@@ -352,7 +361,7 @@
                 <h1>PRODUCTION SHIFT REPORT</h1>
                 <div style="font-size: 0.85rem; font-weight: 700; color: var(--primary-light);"></div>
             </div>
-            <div class="date-info">DATE: <span id="display-date">--/--/----</span></div>
+            <div class="date-info">DATE: <span id="display-date" contenteditable="true">--/--/----</span></div>
         </header>
 
         <section class="grid-container">
@@ -485,9 +494,9 @@
                                 <td>-</td>
                             </tr>
                             <tr>
-                                <td class="label">K3 & L1</td>
-                                <td id="p-k3">0</td>
-                                <td id="p-k3-0d" contenteditable="true">26</td>
+                                <td class="label">K4 & L1</td>
+                                <td id="p-k4">0</td>
+                                <td id="p-k4-0d" contenteditable="true"></td>
                             </tr>
                         </tbody>
                     </table>
@@ -496,7 +505,7 @@
                     <table>
                         <thead>
                             <tr style="background: #fef3c7; color: #92400e;">
-                                <th colspan="4">PENDING DETAILS @ 8:00 AM</th>
+                                <th colspan="4">PENDING DETAILS @ 7:00 AM</th>
                             </tr>
                             <tr>
                                 <th style="width: 80px;">CODE</th>
@@ -590,7 +599,7 @@
                 const reader = new FileReader();
                 // cellStyles:true is REQUIRED so SheetJS reads the hidden/filtered row metadata (!rows[n].hidden)
                 // Without this flag, ws['!rows'] is always empty and filtered rows are never skipped
-                reader.onload = (e) => r(XLSX.read(e.target.result, { type: 'array', cellStyles: true, sheetStubs: true }));
+                reader.onload = (e) => r(XLSX.read(e.target.result, { type: 'array', cellStyles: true, sheetStubs: true, cellDates: true }));
                 reader.readAsArrayBuffer(file);
             });
         }
@@ -655,13 +664,34 @@
                     const modB = getVal('J5');
                     const modC = getVal('J6');
 
-                    addLog(`[Sheet "${sheetName}" idx=${sheetIndex}] Reading MODEL TO OPAQUE: J4=${modA}, J5=${modB}, J6=${modC}`, 'info');
+                    const tarA = getVal('C4');
+                    const tarB = getVal('C5');
+                    const modTarA = getVal('I4');
+                    const modTarB = getVal('I5');
+                    const reportDate = ws['K1'] ? (ws['K1'].v instanceof Date ? ws['K1'].v : ws['K1'].w || ws['K1'].v) : null;
+
+                    addLog(`[Sheet "${sheetName}"] Targets: Out(A=${tarA}, B=${tarB}), Mod(A=${modTarA}, B=${modTarB}) | Date: ${reportDate}`, 'info');
+
+                    if (tarA > 0) set('s-a-out-tar', tarA);
+                    if (tarB > 0) set('s-b-out-tar', tarB);
+                    if (modTarA > 0) set('s-a-mod-tar', modTarA);
+                    if (modTarB > 0) set('s-b-mod-tar', modTarB);
+
+                    if (reportDate) {
+                        if (reportDate instanceof Date) {
+                            const d = reportDate;
+                            const fmt = `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
+                            set('display-date', fmt);
+                        } else {
+                            set('display-date', String(reportDate).replace(/\//g, '-'));
+                        }
+                    }
 
                     updateShiftValues('A', "OUTSIDE", 0, 0, modA);
                     updateShiftValues('B', "OUTSIDE", 0, 0, modB);
                     updateShiftValues('C', "", 0, 0, modC);
 
-                    addLog(`[Performance Sheet] MODEL TO OPAQUE: A=${modA}, B=${modB}, C=${modC}`, 'success');
+                    addLog(`[Performance Sheet] Applied Targets and MODEL TO OPAQUE values`, 'success');
                     return; // skip row-by-row parsing for this sheet
                 }
 
@@ -734,7 +764,7 @@
                     if (label.includes("METAL FREE") && !label.includes("CB")) set('p-mf', val);
                     if (label.includes("MLC")) set('p-mlc', val);
                     if (label.includes("MAGNA")) set('p-mn', val);
-                    // K3 & L1 handled below after priority code loop
+                    // K4 & L1 handled below after priority code loop
                 });
                 addLog(`Pending Tracker: parsed summary from "${wb.SheetNames[0]}"`, 'success');
             }
@@ -795,7 +825,7 @@
             let totalDataRows = 0;
             let tsdTotal = 0;
             rows.forEach((row, idx) => {
-                let rawCode = clean(row['C']); 
+                let rawCode = clean(row['C']);
                 let code = rawCode.replace(/[*]/g, ''); // Strip asterisks for variations (B2*, K3*, etc.)
                 const teeth = parseFloat(String(row['I'] || "0").replace(/,/g, '')) || 0;
                 const status = clean(row['L']); // Column L
@@ -817,8 +847,8 @@
             });
 
             set('c-tsd-val', tsdTotal);
-            
-            // K3 & L1 handled in parsePending830Tracker as per latest request
+
+            // K4 & L1 handled in parsePending830Tracker as per latest request
             addLog(`Total rows in sheet: ${totalRows}, Rows matching codes: ${totalDataRows}, TSD Sum: ${tsdTotal}`, 'info');
             addLog(`Row counts per code: ${JSON.stringify(countMap)}`, 'info');
             addLog(`Teeth per code: ${JSON.stringify(teethMap)}`, 'success');
@@ -832,7 +862,41 @@
                 let magnaNovaCount = 0;
                 let mlcCount = 0;
                 let metalFreeCount = 0;
-                let k3L1Count = 0;
+                let k4L1Count = 0;
+                let zeroDaySum = 0;
+
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const yesterday = new Date(today);
+                yesterday.setDate(yesterday.getDate() - 1);
+
+                function isTodayOrYesterday(val) {
+                    if (!val) return false;
+                    let d = null;
+                    if (val instanceof Date) {
+                        d = new Date(val);
+                    } else if (typeof val === 'string') {
+                        // Handle DD-MM-YYYY or DD/MM/YYYY
+                        const parts = val.split(/[/-]/);
+                        if (parts.length === 3) {
+                            const day = parseInt(parts[0]);
+                            const month = parseInt(parts[1]) - 1;
+                            let year = parseInt(parts[2]);
+                            if (year < 100) year += 2000;
+                            d = new Date(year, month, day);
+                        } else {
+                            d = new Date(val);
+                        }
+                    } else if (typeof val === 'number') {
+                        // Excel serial to JS date: (serial - 25569) * 86400 * 1000
+                        d = new Date((val - 25569) * 86400 * 1000);
+                    }
+
+                    if (!d || isNaN(d.getTime())) return false;
+                    d.setHours(0, 0, 0, 0);
+                    const checkTime = d.getTime();
+                    return checkTime === today.getTime() || checkTime === yesterday.getTime();
+                }
 
                 let teethCol = 'I';
                 // Automatically find the column containing 'TEETH' in case it's not column I
@@ -849,8 +913,8 @@
                     const teeth = parseFloat(row[teethCol]) || parseFloat(row['I']) || 0;
                     if (teeth > 0) {
                         const codeCol = clean(row['C']).replace(/[*]/g, '');
-                        if (codeCol === 'K3' || codeCol === 'L1') {
-                            k3L1Count += teeth;
+                        if (codeCol === 'K4' || codeCol === 'L1') {
+                            k4L1Count += teeth;
                         }
 
                         const nameCol = String(row['G'] || "").toUpperCase();
@@ -861,10 +925,18 @@
                         } else {
                             metalFreeCount += teeth;
                         }
+
+                        // 0 DAY calculation: Column J for current or previous date
+                        if (isTodayOrYesterday(row['J'])) {
+                            zeroDaySum += teeth;
+                        }
                     }
                 });
 
-                set('p-k3', k3L1Count);
+                window.pending0Day = zeroDaySum;
+                set('p-0d-sum', zeroDaySum);
+
+                set('p-k4', k4L1Count);
                 set('p-mn', magnaNovaCount);
                 set('p-mlc', mlcCount);
                 set('p-mf', metalFreeCount);
@@ -940,7 +1012,58 @@
             set('det-grand', pendingGrandTotal);
 
             set('p-tot', get('p-mf') + get('p-mlc') + get('p-mn'));
-            set('p-0d-sum', get('p-mf') + get('p-mlc') + get('p-mn'));
+            if (window.pending0Day !== undefined) {
+                set('p-0d-sum', window.pending0Day);
+            } else {
+                set('p-0d-sum', get('p-mf') + get('p-mlc') + get('p-mn'));
+            }
+        }
+
+        async function importToExcel() {
+            const reportDate = DOM.date.innerText.trim();
+            if (!reportDate || reportDate === '--/--/----') {
+                alert("Please generate a report first.");
+                return;
+            }
+
+            addLog(`Starting Import Process for ${reportDate}...`, 'info');
+
+            try {
+                const wb = XLSX.utils.book_new();
+
+                // 1. Shift Output Summary
+                const outputTable = document.querySelector('.shift-output-table');
+                const wsOutput = XLSX.utils.table_to_sheet(outputTable);
+                XLSX.utils.book_append_sheet(wb, wsOutput, `OUTPUT_${reportDate}`);
+
+                // 2. Pending 8:30 Summary
+                const pendingTables = document.querySelectorAll('.grid-container table');
+                if (pendingTables.length >= 2) {
+                    const wsPending = XLSX.utils.table_to_sheet(pendingTables[1]);
+                    XLSX.utils.book_append_sheet(wb, wsPending, `PENDING_${reportDate}`);
+                }
+
+                // 3. Detailed Pending
+                const detTable = document.querySelector('#det-body').parentElement;
+                const wsDet = XLSX.utils.table_to_sheet(detTable);
+                XLSX.utils.book_append_sheet(wb, wsDet, `DETAILS_${reportDate}`);
+
+                // Generate file name
+                const fileName = `REPORT_${reportDate}.xlsx`;
+
+                // Export
+                XLSX.writeFile(wb, fileName);
+
+                addLog(`Report data exported successfully as ${fileName}`, 'success');
+                addLog(`Target Location: \\\\10.199.100.4\\PPC Share\\18-PPC CONTROLLER\\PPC DATABASE\\DAILY REPORT\\`, 'info');
+                addLog(`Please move/append this file to the master REPORT.xlsx at the location above.`, 'info');
+
+                alert(`Export Complete!\nFileName: ${fileName}\n\nPlease save or move this file to the PPC Share network location.`);
+            } catch (err) {
+                console.error(err);
+                addLog(`Import failed: ${err.message}`, 'error');
+                alert("Error during import: " + err.message);
+            }
         }
 
         document.addEventListener('input', () => recalculate());
