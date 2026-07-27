@@ -220,10 +220,19 @@
         [contenteditable="true"] {
             outline: none;
             background: #fff;
+            cursor: pointer;
+            transition: background-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        [contenteditable="true"]:hover {
+            background-color: #f1f5f9;
+            box-shadow: inset 0 0 0 1px #cbd5e1;
         }
 
         [contenteditable="true"]:focus {
-            background: #fffbeb;
+            background-color: #fffbeb;
+            box-shadow: inset 0 0 0 2px #f59e0b;
+            cursor: text;
         }
 
         .btn-import {
@@ -389,18 +398,18 @@
                         <tr>
                             <td class="label">OUTSIDE KERALA</td>
                             <td rowspan="3" id="s-a-out-tar" contenteditable="true">2000</td>
-                            <td id="s-a-out-from">0</td>
-                            <td id="s-a-out-rep">0</td>
+                            <td id="s-a-out-from" contenteditable="true">0</td>
+                            <td id="s-a-out-rep" contenteditable="true">0</td>
                             <td id="s-a-out-total" class="text-bold">0</td>
                             <td rowspan="3" id="s-a-eff" class="bg-primary-td text-bold">0%</td>
                             <td rowspan="3" id="s-a-mod-tar" contenteditable="true">1725</td>
-                            <td rowspan="3" id="s-a-mod-ach" class="text-bold">0</td>
+                            <td rowspan="3" id="s-a-mod-ach" class="text-bold" contenteditable="true">0</td>
                             <td rowspan="3" id="s-a-mod-eff" class="bg-accent-td text-bold">0%</td>
                         </tr>
                         <tr>
                             <td class="label">INSIDE KERALA</td>
-                            <td id="s-a-ins-from">0</td>
-                            <td id="s-a-ins-rep">0</td>
+                            <td id="s-a-ins-from" contenteditable="true">0</td>
+                            <td id="s-a-ins-rep" contenteditable="true">0</td>
                             <td id="s-a-ins-total" class="text-bold">0</td>
                         </tr>
                         <tr class="total-row">
@@ -413,18 +422,18 @@
                         <tr>
                             <td class="label">OUTSIDE KERALA</td>
                             <td rowspan="3" id="s-b-out-tar" contenteditable="true">1850</td>
-                            <td id="s-b-out-from">0</td>
-                            <td id="s-b-out-rep">0</td>
+                            <td id="s-b-out-from" contenteditable="true">0</td>
+                            <td id="s-b-out-rep" contenteditable="true">0</td>
                             <td id="s-b-out-total" class="text-bold">0</td>
                             <td rowspan="3" id="s-b-eff" class="bg-primary-td text-bold">0%</td>
                             <td rowspan="3" id="s-b-mod-tar" contenteditable="true">1325</td>
-                            <td rowspan="3" id="s-b-mod-ach" class="text-bold">0</td>
+                            <td rowspan="3" id="s-b-mod-ach" class="text-bold" contenteditable="true">0</td>
                             <td rowspan="3" id="s-b-mod-eff" class="bg-accent-td text-bold">0%</td>
                         </tr>
                         <tr>
                             <td class="label">INSIDE KERALA</td>
-                            <td id="s-b-ins-from">0</td>
-                            <td id="s-b-ins-rep">0</td>
+                            <td id="s-b-ins-from" contenteditable="true">0</td>
+                            <td id="s-b-ins-rep" contenteditable="true">0</td>
                             <td id="s-b-ins-total" class="text-bold">0</td>
                         </tr>
                         <tr class="total-row">
@@ -437,12 +446,12 @@
                         <tr>
                             <td class="label">SHIFT-C</td>
                             <td id="s-c-tar" contenteditable="true">650</td>
-                            <td id="s-c-from">0</td>
-                            <td id="s-c-rep">0</td>
+                            <td id="s-c-from" contenteditable="true">0</td>
+                            <td id="s-c-rep" contenteditable="true">0</td>
                             <td id="s-c-total" class="text-bold">0</td>
                             <td id="s-c-eff" class="bg-primary-td text-bold">0%</td>
                             <td id="s-c-mod-tar" contenteditable="true">650</td>
-                            <td id="s-c-mod-ach" class="text-bold">0</td>
+                            <td id="s-c-mod-ach" class="text-bold" contenteditable="true">0</td>
                             <td id="s-c-mod-eff" class="bg-accent-td text-bold">0%</td>
                         </tr>
                     </tbody>
@@ -477,16 +486,16 @@
                         <tbody>
                             <tr>
                                 <td class="label">METAL FREE</td>
-                                <td id="p-mf">0</td>
-                                <td rowspan="3" id="p-0d-sum" class="bg-primary-td text-bold">0</td>
+                                <td id="p-mf" contenteditable="true">0</td>
+                                <td rowspan="3" id="p-0d-sum" class="bg-primary-td text-bold" contenteditable="true">0</td>
                             </tr>
                             <tr>
                                 <td class="label">MLC</td>
-                                <td id="p-mlc">0</td>
+                                <td id="p-mlc" contenteditable="true">0</td>
                             </tr>
                             <tr>
                                 <td class="label">MAGNA & NOVA</td>
-                                <td id="p-mn">0</td>
+                                <td id="p-mn" contenteditable="true">0</td>
                             </tr>
                             <tr class="total-row">
                                 <td class="label">TOTAL</td>
@@ -495,8 +504,8 @@
                             </tr>
                             <tr>
                                 <td class="label">K4 & L1</td>
-                                <td id="p-k4">0</td>
-                                <td id="p-k4-0d" contenteditable="true"></td>
+                                <td id="p-k4" contenteditable="true">0</td>
+                                <td id="p-k4-0d" contenteditable="true">0</td>
                             </tr>
                         </tbody>
                     </table>
@@ -562,7 +571,7 @@
 
             let html = '';
             CODES.forEach((c, idx) => {
-                html += `<tr><td class="label">${c}</td><td id="c-cnt-${c}">0</td>${idx === 0 ? `<td rowspan="${CODES.length}" id="c-tsd-val" contenteditable="true">0</td>` : ''}${idx === 0 ? `<td rowspan="${CODES.length}" id="c-0d-val" contenteditable="true">0</td>` : ''}</tr>`;
+                html += `<tr><td class="label">${c}</td><td id="c-cnt-${c}" contenteditable="true">0</td>${idx === 0 ? `<td rowspan="${CODES.length}" id="c-tsd-val" contenteditable="true">0</td>` : ''}${idx === 0 ? `<td rowspan="${CODES.length}" id="c-0d-val" contenteditable="true">0</td>` : ''}</tr>`;
             });
             DOM.detBody.innerHTML = html;
         }
@@ -945,13 +954,41 @@
             }
         }
 
+        function evaluateMath(text) {
+            if (!text) return 0;
+            let cleanText = String(text).trim().replace(/^=/, '').replace(/,/g, '').trim();
+            if (!cleanText) return 0;
+
+            // Convert percentages e.g. 50% -> (50/100)
+            cleanText = cleanText.replace(/(\d+(\.\d+)?)%/g, '($1/100)');
+
+            // Fast track simple numbers
+            if (/^-?\d+(\.\d+)?$/.test(cleanText)) {
+                const num = parseFloat(cleanText);
+                return isNaN(num) ? 0 : num;
+            }
+
+            // Security & syntax check: allow only digits, dots, spaces, math operators (+, -, *, /), parens
+            if (!/^[0-9\.\s\+\-\*\/\(\)]+$/.test(cleanText)) {
+                const fallback = parseFloat(cleanText);
+                return isNaN(fallback) ? 0 : fallback;
+            }
+
+            try {
+                const result = Function(`"use strict"; return (${cleanText});`)();
+                return (typeof result === 'number' && !isNaN(result) && isFinite(result)) ? result : 0;
+            } catch (e) {
+                const fallback = parseFloat(cleanText);
+                return isNaN(fallback) ? 0 : fallback;
+            }
+        }
+
         function set(id, v) { const el = document.getElementById(id); if (el) el.innerText = typeof v === 'number' ? v : (v || 0); }
         function get(id) {
             const el = document.getElementById(id);
             if (!el) return 0;
-            const text = (el.innerText || el.textContent || "0").trim().replace(/,/g, '');
-            const val = parseFloat(text);
-            return isNaN(val) ? 0 : val;
+            const text = (el.innerText || el.textContent || "0").trim();
+            return evaluateMath(text);
         }
 
         function recalculate() {
@@ -1012,10 +1049,8 @@
             set('det-grand', pendingGrandTotal);
 
             set('p-tot', get('p-mf') + get('p-mlc') + get('p-mn'));
-            if (window.pending0Day !== undefined) {
+            if (window.pending0Day !== undefined && document.activeElement?.id !== 'p-0d-sum') {
                 set('p-0d-sum', window.pending0Day);
-            } else {
-                set('p-0d-sum', get('p-mf') + get('p-mlc') + get('p-mn'));
             }
         }
 
@@ -1067,6 +1102,22 @@
         }
 
         document.addEventListener('input', () => recalculate());
+        document.addEventListener('keydown', (e) => {
+            if (e.target.isContentEditable && e.key === 'Enter') {
+                e.preventDefault();
+                e.target.blur();
+            }
+        });
+        document.addEventListener('focusout', (e) => {
+            if (e.target.isContentEditable) {
+                const raw = (e.target.innerText || e.target.textContent || "").trim();
+                if (raw.includes('+') || raw.includes('-') || raw.includes('*') || raw.includes('/') || raw.startsWith('=') || raw.includes('%')) {
+                    const evaluated = evaluateMath(raw);
+                    e.target.innerText = evaluated;
+                    recalculate();
+                }
+            }
+        });
         init();
     </script>
 </body>
